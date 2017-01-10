@@ -1,0 +1,17 @@
+[package]
+name = "mirage-high"
+version = "0.1.0"
+authors = ["Jony <jonysy@users.noreply.github.com>"]
+license = "MIT/Apache-2.0"
+
+[dependencies]
+current = "0.1.2"
+piston_window = "0.61.0"
+
+[dependencies.av-foundation]
+path = "../../av-foundation"
+version = "0.1.0"
+
+[dependencies.lychee]
+path = "../../metapackage"
+version = "0.1.0"
