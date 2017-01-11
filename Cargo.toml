@@ -4,10 +4,20 @@ version = "0.1.0"
 authors = ["Jony <jonysy@users.noreply.github.com>"]
 license = "MIT/Apache-2.0"
 
+[[bin]]
+name = "mirage"
+path = "src/.bin/main.rs"
+
 [dependencies]
+current = "0.1.2"
 libloading = "0.3.1"
 log = "0.3.6"
+piston_window = "0.61.0"
 
-[dependencies.mirage-high]
-path = "high"
+[dependencies.av-foundation]
+path = "../av-foundation"
+version = "0.1.0"
+
+[dependencies.lychee]
+path = "../metapackage"
 version = "0.1.0"

@@ -1,14 +1,15 @@
 extern crate mirage_high as high;
 
+use high::types::PistonWindow;
 use std::{thread, time};
 
 #[no_mangle]
-pub fn load() -> bool {
-	println!("hello");
+pub fn start(window: &mut PistonWindow) -> bool {
 
-	let ten_millis = time::Duration::from_millis(10);
+	high::mirage::currentize::<_, bool>(window, || {
 
-	thread::sleep(ten_millis);
+		
 
-	true
+		true
+	})
 }

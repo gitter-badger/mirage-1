@@ -3,7 +3,7 @@ use lychee::image::ImageBuffer;
 use piston_window::{Event, PistonWindow, Texture, TextureSettings};
 use std::mem;
 
-pub fn currentize<F>(window: &mut PistonWindow, fun: F) where F: Fn() {
+pub fn currentize<F,T>(window: &mut PistonWindow, fun: F) -> T where F: Fn() -> T {
 
 	let mut texture = {
 		let image_buffer = ImageBuffer::new(1280, 720);
@@ -20,9 +20,11 @@ pub fn currentize<F>(window: &mut PistonWindow, fun: F) where F: Fn() {
 	let texture_guard = CurrentGuard::new(&mut texture);
 	let event_guard: CurrentGuard<Option<Event>> = CurrentGuard::new(&mut event);
 
-	fun();
+	let return_ = fun();
 
 	mem::drop(event_guard);
 	mem::drop(texture_guard);
 	mem::drop(window_guard);
+
+	return_
 }
