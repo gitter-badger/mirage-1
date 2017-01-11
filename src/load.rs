@@ -4,7 +4,9 @@ use std::process::Command;
 
 use super::conf;
 
-pub fn dylib() {
+type Fn = (fn() -> bool);
+
+pub fn dylib() -> bool {
 
 	info!("[Mirage] Rebuilding library.");
 
@@ -30,18 +32,21 @@ pub fn dylib() {
 
 		let library = Library::new(&path).expect("failed to load dynamic library");
 
-		unsafe {
+		// Pointer to function
+		let function = unsafe {
 
-			// Pointer to function
-			let function = library.get::<fn()>(b"load").expect("failed to get point to function");
+			library.get::<Fn>(b"load")
+				   .expect("failed to get point to function")
+		};
 
-			function()
-		}
+		function()
 
 	} else {
 
 		error!("{}", output.status);
 		error!("{}", String::from_utf8_lossy(&output.stdout));
 		error!("{}", String::from_utf8_lossy(&output.stderr));
+
+		unimplemented!()
 	}
 }

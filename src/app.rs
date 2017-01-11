@@ -1,4 +1,7 @@
+use load;
+
 #[main]
 pub fn main() { 
-	println!("Hello!");
+
+	while load::dylib() { }
 }

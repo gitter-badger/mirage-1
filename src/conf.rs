@@ -1,2 +1,2 @@
-pub const DIRECTORY: &'static str = "./loadable";
-pub const NAME: &'static str = "loadable";
+pub const DIRECTORY: &'static str = "./.dylib";
+pub const NAME: &'static str = "load";
