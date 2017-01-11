@@ -6,6 +6,7 @@ license = "MIT/Apache-2.0"
 
 [dependencies]
 libloading = "0.3.1"
+log = "0.3.6"
 
 [dependencies.mirage-high]
 path = "high"
