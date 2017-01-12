@@ -6,7 +6,8 @@ fn main() {
 
 use lib::Library;
 use high::mirage;
-use high::reexport::PistonWindow;
+use high::av::Capture;
+use high::reexport::{PistonWindow, Resources, Texture};
 use log::{Log, LogLevel, LogLevelFilter, LogMetadata, LogRecord};
 use std::{fs, io, process, thread, time};
 use std::path::Path;
@@ -53,13 +54,17 @@ impl Application {
 		Ok(Application { lib: lib })
 	}
 
-	fn app(&self, window: &mut PistonWindow) -> lib::Result<()> {
+	fn app(&self, capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut PistonWindow) 
+		-> lib::Result<()>
+	{
+
+		type Fn = unsafe extern fn(&mut Capture, &mut Texture<Resources>, &mut PistonWindow);
 
 		unsafe {
 
-			let func: lib::Symbol<unsafe extern fn(&mut PistonWindow) -> ()> = self.lib.get(b"app")?;
+			let func: lib::Symbol<Fn> = self.lib.get(b"app")?;
 
-			Ok(func(window))
+			Ok(func(capture, texture, window))
 		}
 	}
 }
@@ -80,7 +85,7 @@ fn wait_for_changes() {
 	}
 }
 
-fn app(window: &mut PistonWindow) {
+fn app(capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut PistonWindow) {
 	// open script
 	let mut source = fs::File::open(SCRIPT_PATH).expect("failed to open script");
 
@@ -109,7 +114,7 @@ fn app(window: &mut PistonWindow) {
 
 		info!("Library successfully loaded.");
 
-		application.app(window).expect("failed to call `fn`"); 
+		application.app(capture, texture, window).expect("failed to call `fn`"); 
 
 	} else {
 
@@ -121,14 +126,33 @@ fn app(window: &mut PistonWindow) {
 		wait_for_changes();
 		info!("Recompiling");
 
-		app(window);
+		app(capture, texture, window)
 	}
 }
 
 mirage::start(app);
 
 
+	// loop {
 
+	// 	let dur = ::std::time::Duration::from_secs(2);
+	// 	::std::thread::sleep(dur);
+
+	// 	let application = app();
+
+	// 	application.app().expect("failed to call `fn`");
+
+	// 	// if window.should_close() {
+
+	// 	// 	info!("Closing window");
+
+	// 	// 	break
+	// 	// }
+
+	// 	::std::mem::drop(application);
+
+	// 	info!("Reloading script");
+	// }
 
 
 

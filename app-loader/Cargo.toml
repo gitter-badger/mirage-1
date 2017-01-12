@@ -8,12 +8,12 @@ license = "MIT/Apache-2.0"
 # current = "0.1.2"
 libloading = "0.3.1"
 log = "0.3.6"
-notify = "^3.0.0"
+# notify = "^3.0.0"
 # piston_window = "0.60.0"
 
-# [dependencies.av-foundation]
-# path = "../../av-foundation"
-# version = "0.1.0"
+[dependencies.av-foundation]
+path = "../../av-foundation"
+version = "0.1.0"
 
 [dependencies.high]
 path = "../high"

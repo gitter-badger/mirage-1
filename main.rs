@@ -1,9 +1,13 @@
 use high::{av, mirage, piston};
 
+//av::conn();
+
 while piston::open() {
 
 	if piston::render() {
-
+		//let image = av::read();
+		
+		//let _ = piston::draw_image(&image);
 	}
 
 	if let Some(key) = piston::pressed_key() {

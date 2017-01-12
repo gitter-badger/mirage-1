@@ -1,5 +1,6 @@
 use current::Current;
-use piston_window::{Event, PistonWindow};
+use lychee::image::RgbaImage;
+use piston_window::{self, Event, PistonWindow, Texture};
 
 /// # Example
 ///
@@ -58,5 +59,26 @@ pub fn render() -> bool {
 	unsafe {
 		
 		Current::<Option<Event>>::new().is_some()
+	}
+}
+
+pub fn draw_image(image: &RgbaImage) -> Result<(), String> {
+	let window = unsafe { &mut *Current::<PistonWindow>::new() };
+	let opt_event = unsafe { &*Current::<Option<Event>>::new() };
+	let texture = unsafe { &mut *Current::<Texture<_>>::new() };
+
+	match opt_event {
+		&Some(ref event) => {
+			texture.update(&mut window.encoder, image).unwrap();
+
+			window.draw_2d(event, |context, graphics_2d| {
+				//clear([0.5, 1.0, 0.5, 1.0], graphics_2d);
+				piston_window::image(texture, context.transform, graphics_2d);
+			});
+
+			Ok(())
+		},
+
+		_ => Err(String::from("No event!")),
 	}
 }
