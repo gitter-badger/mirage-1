@@ -1,0 +1,10 @@
+[package]
+name = "high"
+version = "0.1.0"
+authors = ["Jony <jonysy@users.noreply.github.com>"]
+license = "MIT/Apache-2.0"
+
+[dependencies]
+current = "0.1.2"
+log = "0.3.6"
+piston_window = "0.60.0"

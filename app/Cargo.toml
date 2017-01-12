@@ -1,13 +1,11 @@
 [package]
-name = "load"
+name = "app"
 version = "0.1.0"
 authors = ["Jony <jonysy@users.noreply.github.com>"]
 license = "MIT/Apache-2.0"
 
 [lib]
-name = "load"
-crate_type = ["dylib"]
+crate-type = ["dylib"]
 
-[dependencies.mirage-high]
+[dependencies.high]
 path = "../high"
-version = "0.1.0"
