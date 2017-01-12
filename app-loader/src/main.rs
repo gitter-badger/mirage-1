@@ -2,19 +2,18 @@
 extern crate high;
 extern crate libloading as lib;
 
-fn main() {
-
 use lib::Library;
 use high::mirage;
 use high::av::Capture;
 use high::reexport::{PistonWindow, Resources, Texture};
-use log::{Log, LogLevel, LogLevelFilter, LogMetadata, LogRecord};
-use std::{fs, io, process, thread, time};
+use log::{Log, LogLevel, LogLevelFilter, LogMetadata, LogRecord, MaxLogLevelFilter};
+use std::{fs, io, mem, process, thread, time};
 use std::path::Path;
 use std::io::Write;
 
 const LIB_DIRECTORY: &'static str = "../app";
 const LIB_PATH: &'static str = "../app/target/debug/libapp";
+//const LIB_PATH: &'static str = "../app/target/release/libapp";
 const SCRIPT_PATH: &'static str = "../main.rs";
 const SCRIPT_OUTPUT_PATH: &'static str = "../app/.script";
 
@@ -38,8 +37,6 @@ impl Log for Logger {
         }
     }
 }
-
-log::set_logger(|f| {f.set(LogLevelFilter::Info); Box::new(Logger)}).expect("failed to set logger");
 
 struct Application { lib: Library }
 
@@ -102,6 +99,7 @@ fn app(capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut Pis
 	let output = process::
 		Command::new("cargo")
 				.arg("build")
+				//.arg("--release")
 				.current_dir(LIB_DIRECTORY)
 				.output()
 				.expect("failed to execute process");
@@ -114,7 +112,9 @@ fn app(capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut Pis
 
 		info!("Library successfully loaded.");
 
-		application.app(capture, texture, window).expect("failed to call `fn`"); 
+		application.app(capture, texture, window).expect("failed to call `fn`");
+
+		mem::drop(application)
 
 	} else {
 
@@ -130,32 +130,13 @@ fn app(capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut Pis
 	}
 }
 
-mirage::start(app);
+fn main() {
+	let make_logger = |filter: MaxLogLevelFilter| -> Box<Log> {
+		filter.set(LogLevelFilter::Info);
+		Box::new(Logger)
+	};
 
+	log::set_logger(make_logger).expect("failed to set logger");
 
-	// loop {
-
-	// 	let dur = ::std::time::Duration::from_secs(2);
-	// 	::std::thread::sleep(dur);
-
-	// 	let application = app();
-
-	// 	application.app().expect("failed to call `fn`");
-
-	// 	// if window.should_close() {
-
-	// 	// 	info!("Closing window");
-
-	// 	// 	break
-	// 	// }
-
-	// 	::std::mem::drop(application);
-
-	// 	info!("Reloading script");
-	// }
-
-
-
-
-
+	mirage::start(app);
 }
