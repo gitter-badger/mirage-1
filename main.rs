@@ -1,7 +1,10 @@
-use high::{mirage, piston};
+use high::{av, mirage, piston};
 
 while piston::open() {
 
+	if piston::render() {
+
+	}
 
 	if let Some(key) = piston::pressed_key() {
 

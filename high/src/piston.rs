@@ -23,6 +23,8 @@ pub fn open() -> bool {
 	return open;
 }
 
+/// Returns the keyboard key for press event.
+///
 /// # Example
 ///
 /// ```rust
@@ -48,4 +50,13 @@ pub fn pressed_key() -> Option<u64> {
 	}
 
 	None
+}
+
+/// Returns `true` when time to render.
+pub fn render() -> bool {
+
+	unsafe {
+		
+		Current::<Option<Event>>::new().is_some()
+	}
 }
