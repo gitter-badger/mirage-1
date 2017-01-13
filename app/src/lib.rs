@@ -5,7 +5,5 @@ use high::mirage;
 #[no_mangle]
 pub fn app() -> Result<(), String> {
 	
-	include!("../../.main.rs");
-
-	Ok(())
+	Ok(include!(concat!(env!("OUT_DIR"), "/.main.rs")))
 }
