@@ -1,5 +1,5 @@
-pub use self::capture::Capture;
-mod capture;
+pub use self::av::Capture;
+mod av;
 
 use current::Current;
 use lychee::image::RgbaImage;
@@ -7,6 +7,11 @@ use lychee::image::RgbaImage;
 pub fn conn() {
 	let capture = unsafe { &mut *Current::<Capture>::new() };
 	capture.conn()
+}
+
+pub fn disconn() {
+	let capture = unsafe { &mut *Current::<Capture>::new() };
+	capture.stop()
 }
 
 pub fn read() -> RgbaImage {

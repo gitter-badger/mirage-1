@@ -21,6 +21,8 @@ pub struct Capture {
 impl Capture {
 	#[allow(dead_code)]
 	pub fn init() -> Capture {
+		info!("initializing capture delegate");
+
 		let super_ = AvCaptureVideoDataOutputSampleBufferDelegate::init();
 
 		// A session is used to control the flow of the data from the input to the output device.
@@ -98,12 +100,24 @@ impl Capture {
 	}
 
 	pub fn conn(&mut self) {
+		info!("starting the flow of data from the inputs to the outputs");
 		if self.conn {
 			return ();
 		}
 
 		self.session.startRunning();
 		self.conn = true;
+	}
+
+	pub fn stop(&mut self) {
+		info!("stopping the flow of data from the inputs to the outputs");
+
+		if !self.conn {
+			return ();
+		}
+
+		self.session.stopRunning();
+		self.conn = false;
 	}
 
 	pub fn frame(&self) -> RgbaImage {

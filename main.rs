@@ -1,13 +1,14 @@
-use high::{av, mirage, piston};
+use high::{capture, mirage, piston};
 
-av::conn();
+capture::conn();
 
 while piston::open() {
 
 	if piston::render() {
-		let image = av::read();
+		
+		let image = capture::read();
 
-		let _ = piston::draw_image(&image);
+		piston::draw_image(&image)?;
 	}
 
 	if let Some(key) = piston::pressed_key() {
@@ -17,7 +18,7 @@ while piston::open() {
 			match key as u8 as char {
 				'r' => {
 
-					// reload if the window is still open
+					// Will reload if the window is still open
 					break
 				},
 
@@ -28,3 +29,5 @@ while piston::open() {
 		}
 	}
 }
+
+capture::disconn();

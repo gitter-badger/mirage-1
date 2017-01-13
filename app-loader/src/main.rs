@@ -1,21 +1,29 @@
+// `cargo run --release --manifest-path app-loader/Cargo.toml`
+//
+// `cd app-loader && cargo run --release`
+
 #[macro_use] extern crate log;
 extern crate high;
-extern crate libloading as lib;
+extern crate libloading;
 
-use lib::Library;
+use libloading::{Library, Symbol};
 use high::mirage;
-use high::av::Capture;
-use high::reexport::{PistonWindow, Resources, Texture};
 use log::{Log, LogLevel, LogLevelFilter, LogMetadata, LogRecord, MaxLogLevelFilter};
 use std::{fs, io, mem, process, thread, time};
 use std::path::Path;
 use std::io::Write;
 
 const LIB_DIRECTORY: &'static str = "../app";
+//const LIB_PATH: &'static str = "../app/target/debug/libapp";
+
+#[cfg(debug_assertions)]
 const LIB_PATH: &'static str = "../app/target/debug/libapp";
-//const LIB_PATH: &'static str = "../app/target/release/libapp";
+
+#[cfg(not(debug_assertions))]
+const LIB_PATH: &'static str = "../app/target/release/libapp";
+
 const SCRIPT_PATH: &'static str = "../main.rs";
-const SCRIPT_OUTPUT_PATH: &'static str = "../app/.script";
+const SCRIPT_OUTPUT_PATH: &'static str = "../.main.rs";
 
 #[cfg(target_os = "macos")]
 const LIB_EXT: &'static str = "dylib";
@@ -38,35 +46,9 @@ impl Log for Logger {
     }
 }
 
-struct Application { lib: Library }
-
-impl Application {
-
-	fn new() -> lib::Result<Application> {
-		info!("Building library.");
-
-		let path = Path::new(LIB_PATH).with_extension(LIB_EXT);
-		let lib = Library::new(path)?;
-
-		Ok(Application { lib: lib })
-	}
-
-	fn app(&self, capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut PistonWindow) 
-		-> lib::Result<()>
-	{
-
-		type Fn = unsafe extern fn(&mut Capture, &mut Texture<Resources>, &mut PistonWindow);
-
-		unsafe {
-
-			let func: lib::Symbol<Fn> = self.lib.get(b"app")?;
-
-			Ok(func(capture, texture, window))
-		}
-	}
-}
-
 fn wait_for_changes() {
+	info!("waiting for changes");
+
 	let last_modified = fs::metadata(SCRIPT_PATH).unwrap().modified().unwrap();
 	let dur = time::Duration::from_secs(2);
 
@@ -80,9 +62,36 @@ fn wait_for_changes() {
 	        }
 	    }
 	}
+
+	info!("Recompiling");
+
+	application()
 }
 
-fn app(capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut PistonWindow) {
+fn call_dynamic<F>(closure: F) where F: Fn(Result<(), String>) {
+
+	info!("Building library.");
+
+	let path = Path::new(LIB_PATH).with_extension(LIB_EXT);
+	let lib = Library::new(path).expect("failed to load library");
+
+	info!("Library successfully loaded.");
+
+	let result = {
+		let func: Symbol<fn() -> Result<(), String>> = unsafe {
+
+			lib.get(b"app").expect("failed to get `fn`") 
+		};
+
+		func()
+	};
+
+	mem::drop(lib);
+
+	closure(result);
+}
+
+fn application() {
 	// open script
 	let mut source = fs::File::open(SCRIPT_PATH).expect("failed to open script");
 
@@ -96,25 +105,25 @@ fn app(capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut Pis
 	let _ = io::copy(&mut source, &mut destination).expect("failed to copy content from `source`");
 	let _ = write!(destination, "}}");
 
+	let mut args = vec!["build"];
+
+	if !cfg!(debug_assertions) { args.push("--release") }
+
 	let output = process::
 		Command::new("cargo")
-				.arg("build")
-				//.arg("--release")
+				.args(&args)
 				.current_dir(LIB_DIRECTORY)
 				.output()
 				.expect("failed to execute process");
 
 	if output.status.success() {
 
-		info!("Loading library.");
+		let closure = |result| if let Err(st) = result {
+			error!("{}", st);
+			wait_for_changes();
+		};
 
-		let application = Application::new().expect("failed to load library");
-
-		info!("Library successfully loaded.");
-
-		application.app(capture, texture, window).expect("failed to call `fn`");
-
-		mem::drop(application)
+		call_dynamic(closure);
 
 	} else {
 
@@ -122,11 +131,7 @@ fn app(capture: &mut Capture, texture: &mut Texture<Resources>, window: &mut Pis
 		error!("{}", String::from_utf8_lossy(&output.stdout));
 		error!("{}", String::from_utf8_lossy(&output.stderr));
 
-		info!("waiting for changes");
 		wait_for_changes();
-		info!("Recompiling");
-
-		app(capture, texture, window)
 	}
 }
 
@@ -138,5 +143,5 @@ fn main() {
 
 	log::set_logger(make_logger).expect("failed to set logger");
 
-	mirage::start(app);
+	mirage::currentize(application);
 }
