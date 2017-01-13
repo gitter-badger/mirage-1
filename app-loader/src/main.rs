@@ -11,7 +11,7 @@ use high::mirage;
 use log::{Log, LogLevel, LogLevelFilter, LogMetadata, LogRecord, MaxLogLevelFilter};
 use std::{fs, io, mem, process, thread, time};
 use std::path::Path;
-use std::io::Write;
+use std::io::{BufRead, Write};
 
 const LIB_DIRECTORY: &'static str = "../app";
 //const LIB_PATH: &'static str = "../app/target/debug/libapp";
@@ -23,7 +23,7 @@ const LIB_PATH: &'static str = "../app/target/debug/libapp";
 const LIB_PATH: &'static str = "../app/target/release/libapp";
 
 const SCRIPT_PATH: &'static str = "../main.rs";
-const SCRIPT_OUTPUT_PATH: &'static str = "../.main.rs";
+const SCRIPT_OUTPUT_PATH: &'static str = "../app/src/lib.rs";
 
 #[cfg(target_os = "macos")]
 const LIB_EXT: &'static str = "dylib";
@@ -91,19 +91,38 @@ fn call_dynamic<F>(closure: F) where F: Fn(Result<(), String>) {
 	closure(result);
 }
 
-fn application() {
+fn copy() -> io::Result<()> {
 	// open script
-	let mut source = fs::File::open(SCRIPT_PATH).expect("failed to open script");
+	let source = fs::File::open(SCRIPT_PATH)?;
+	let reader = io::BufReader::new(source);
 
 	let destination_path = Path::new(SCRIPT_OUTPUT_PATH);
-	// delete old generated script
-	let _ = fs::remove_file(&destination_path);
-	// create a blank file
-	let mut destination = fs::File::create(&destination_path).expect("failed to move script");
 
-	let _ = write!(destination, "{{");
-	let _ = io::copy(&mut source, &mut destination).expect("failed to copy content from `source`");
-	let _ = write!(destination, "}}");
+	// delete old generated script
+	fs::remove_file(&destination_path)?;
+
+	// create a blank file
+	let mut destination = fs::File::create(&destination_path)?;
+
+	writeln!(destination, "extern crate high;")?;
+
+	writeln!(destination, "#[no_mangle]")?;
+	writeln!(destination, "pub fn app() -> Result<(), String> {{\n")?;
+
+	for line in reader.lines() {
+		writeln!(destination, "    {}", line?)?;
+	}
+
+	writeln!(destination, "")?;
+	writeln!(destination, "    Ok(())")?;
+	writeln!(destination, "}}")?;
+
+	Ok(())
+}
+
+fn application() {
+
+	copy().expect("failed to move `main.rs` to `./app/src/lib.rs`");
 
 	let mut args = vec!["build"];
 
